@@ -1,18 +1,35 @@
+import 'dart:typed_data';
+
 import 'package:aplikasi_pos/pages/penjualan/services.dart';
 import 'package:aplikasi_pos/themes/colors.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:intl/intl.dart';
 import 'package:fdottedline_nullsafety/fdottedline__nullsafety.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+
+//import 'package:image/image.dart';
+
+import 'dart:async';
 
 import '../../widgets/stringextension.dart';
+
+final List _listPrintBarang = [];
+final List _listPrintHarga = [];
+final List _listPrintJumlah = [];
+final List _listPrintSubTotal = [];
+String _printKode = "";
+String _printTotal = "";
 
 bool cekStatus = false;
 bool cekTanggal = false;
 bool cekHeaderTransaksi = true;
+
+bool cekTaanggalHingga = false;
 
 String _hargaTemp = "0";
 String _jumlahTemp = "0";
@@ -31,6 +48,10 @@ bool _filterTanggalCheck = false;
 DateTime _selectedDate = DateTime.now();
 String _formattedDate = "";
 String _date = "";
+
+DateTime _selectedDate2 = DateTime.now();
+String _formattedDate2 = "";
+String _date2 = "";
 
 int tipeStatusKirim = 2;
 
@@ -54,6 +75,9 @@ class _PenjualanPageState extends State<PenjualanPage>
   void initialSelectedDate() {
     _formattedDate = DateFormat('dd-MM-yyyy').format(_selectedDate);
     _date = _formattedDate;
+
+    _formattedDate2 = DateFormat('dd-MM-yyyy').format(_selectedDate2);
+    _date2 = _formattedDate2;
   }
 
   Future<void> selectFilterDate(context) async {
@@ -90,10 +114,46 @@ class _PenjualanPageState extends State<PenjualanPage>
     }
   }
 
+  Future<void> selectFilterDate2(context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: _selectedDate,
+      lastDate: _selectedDate.add(Duration(days: 6)),
+      builder: (context, child) {
+        return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: buttonColor, // header background color
+                onPrimary: lightText, // header text color
+                onSurface: darkText, // body text color
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: navButtonPrimary, // button text color
+                ),
+              ),
+            ),
+            child: child!);
+      },
+    );
+    if (picked != null && picked != _selectedDate2) {
+      if (mounted) {
+        _selectedDate2 = picked;
+        _formattedDate2 = DateFormat('dd-MM-yyyy').format(_selectedDate2);
+        _date2 = _formattedDate2;
+        setState(() {});
+      }
+    }
+  }
+
   @override
   void initState() {
     _tabControllerPenjualanFilter = TabController(length: 4, vsync: this);
-    getTanggalTransaksi = servicesUser.getTanggal(_date, tipeStatusKirim);
+    getTanggalTransaksi = servicesUser.getTanggal(
+        DateFormat('dd-MM-yyyy').format(_selectedDate),
+        tipeStatusKirim,
+        DateFormat('dd-MM-yyyy').format(_selectedDate2));
     getTransaksi = servicesUser.getFilter(_selectedDate, tipeStatusKirim);
     super.initState();
   }
@@ -138,6 +198,8 @@ class _PenjualanPageState extends State<PenjualanPage>
           GestureDetector(
             onTap: () {
               selectFilterDate(context).then((value) => setState(() {}));
+              _selectedDate2 = DateTime.now();
+              _date2 = "";
             },
             child: Container(
               padding: const EdgeInsets.all(8),
@@ -149,6 +211,49 @@ class _PenjualanPageState extends State<PenjualanPage>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(_date),
+                  const Icon(Icons.calendar_month),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  filterTanggalWidget2(context, index, StateSetter setState) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Pilih Tanggal Selesai",
+            style: GoogleFonts.nunito(
+                fontSize: 14,
+                letterSpacing: 0.125,
+                color: buttonColor,
+                fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+          GestureDetector(
+            onTap: () {
+              if (_date != "") {
+                selectFilterDate2(context).then((value) => setState(() {}));
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: Color(0xffE5E5E5),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(_date2),
                   const Icon(Icons.calendar_month),
                 ],
               ),
@@ -214,6 +319,11 @@ class _PenjualanPageState extends State<PenjualanPage>
                               //   height: 25,
                               // ),
                               filterTanggalWidget(
+                                  context, _filterTanggalIndex, setState),
+                              SizedBox(
+                                height: 5,
+                              ),
+                              filterTanggalWidget2(
                                   context, _filterTanggalIndex, setState),
                               SizedBox(
                                 height: 18,
@@ -346,6 +456,8 @@ class _PenjualanPageState extends State<PenjualanPage>
                                 onPressed: () {
                                   _selectedDate = DateTime.now();
                                   _date = "";
+                                  _selectedDate2 = DateTime.now();
+                                  _date2 = "";
                                   tipeStatusKirim = 2;
                                   Navigator.pop(context);
                                 },
@@ -376,13 +488,30 @@ class _PenjualanPageState extends State<PenjualanPage>
                                     const EdgeInsets.symmetric(horizontal: 10),
                                 child: TextButton(
                                   onPressed: () {
-                                    setState(() {
-                                      getTanggalTransaksi = servicesUser
-                                          .getTanggal(_date, tipeStatusKirim);
-                                      getTransaksi = servicesUser.getFilter(
-                                          _date, tipeStatusKirim);
-                                    });
-                                    Navigator.pop(context);
+                                    if (_date != "") {
+                                      if (_date2 != "") {
+                                        setState(() {
+                                          getTanggalTransaksi =
+                                              servicesUser.getTanggal(
+                                                  _date, tipeStatusKirim, _date2);
+                                          getTransaksi = servicesUser.getFilter(
+                                              _date, tipeStatusKirim);
+                                        });
+                                        _selectedDate = DateTime.now();
+                                        _date = "";
+                                        _selectedDate2 = DateTime.now();
+                                        _date2 = "";
+                                        tipeStatusKirim = 2;
+                                        Navigator.pop(context);
+                                      }
+                                    } else {
+                                      _selectedDate = DateTime.now();
+                                      _date = "";
+                                      _selectedDate2 = DateTime.now();
+                                      _date2 = "";
+                                      tipeStatusKirim = 2;
+                                      Navigator.pop(context);
+                                    }
                                   },
                                   child: Text(
                                     "Ok",
@@ -409,6 +538,24 @@ class _PenjualanPageState extends State<PenjualanPage>
     ).whenComplete(() => setState(() {}));
   }
 
+  Future _getPrinter(kode) async {
+    _listPrintBarang.clear();
+    _listPrintHarga.clear();
+    _listPrintJumlah.clear();
+    _listPrintSubTotal.clear();
+
+    var response = await servicesUser.getDetailPenjualanTransaksi(kode);
+    if (response[0] != 404) {
+      for (var element in response[1]) {
+        debugPrint(element.toString());
+        _listPrintBarang.add("${element['nama_barang']}");
+        _listPrintHarga.add("${element['harga_barang']}");
+        _listPrintJumlah.add("${element['jumlah_barang']}");
+        _listPrintSubTotal.add("${element['harga_satuan']}");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
@@ -419,6 +566,7 @@ class _PenjualanPageState extends State<PenjualanPage>
         onPressed: () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => TambahPenjualan()));
+          //Navigator.push(context, MaterialPageRoute(builder: (context) => Print()));
         },
         backgroundColor: buttonColor,
         child: const Icon(Icons.add),
@@ -484,8 +632,10 @@ class _PenjualanPageState extends State<PenjualanPage>
                         _selectedDate = DateTime.now();
                         _date = "";
                         tipeStatusKirim = 2;
-                        getTanggalTransaksi =
-                            servicesUser.getTanggal(_date, tipeStatusKirim);
+                        getTanggalTransaksi = servicesUser.getTanggal(
+                            DateFormat('dd-MM-yyyy').format(_selectedDate),
+                            tipeStatusKirim,
+                            DateFormat('dd-MM-yyyy').format(_selectedDate2));
                         getTransaksi =
                             servicesUser.getFilter(_date, tipeStatusKirim);
                       });
@@ -1088,7 +1238,12 @@ class _PenjualanPageState extends State<PenjualanPage>
                                                                                   backgroundColor: buttonColor,
                                                                                   shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomRight: Radius.circular(20))),
                                                                                 ),
-                                                                                onPressed: () {},
+                                                                                onPressed: () {
+                                                                                  _getPrinter(snapData[1][index]['kode_transaksi']);
+                                                                                  _printKode = snapData[1][index]['kode_transaksi'].toString();
+                                                                                  _printTotal = snapData[1][index]['sub_total_harga'].toString();
+                                                                                  Navigator.push(context, MaterialPageRoute(builder: (context) => PrintPage()));
+                                                                                },
                                                                                 child: Wrap(
                                                                                   crossAxisAlignment: WrapCrossAlignment.center,
                                                                                   children: [
@@ -2708,6 +2863,207 @@ class _TambahPenjualanState extends State<TambahPenjualan> {
                 ],
               ),
             )),
+      ),
+    );
+  }
+}
+
+class PrintPage extends StatefulWidget {
+  const PrintPage({super.key});
+
+  @override
+  State<PrintPage> createState() => _PrintPageState();
+}
+
+class _PrintPageState extends State<PrintPage> {
+  List<BluetoothDevice> devices = [];
+  BluetoothDevice? selectedDevice;
+  BlueThermalPrinter printer = BlueThermalPrinter.instance;
+
+  bool _connected = false;
+  String info = "Not Connect";
+
+  @override
+  initState() {
+    super.initState();
+    getDevices();
+  }
+
+  void getDevices() async {
+    devices = await printer.getBondedDevices();
+    setState(() {});
+
+    printer.onStateChanged().listen((state) {
+      switch (state) {
+        case BlueThermalPrinter.CONNECTED:
+          setState(() {
+            _connected = true;
+            info = "Connected";
+          });
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+          setState(() {
+            _connected = false;
+            info = "Disconnected";
+          });
+          break;
+      }
+    });
+  }
+
+  void showSnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Text(info),
+      backgroundColor: Colors.teal,
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<Uint8List> imagePathToUint8List(String path) async {
+//converting to Uint8List to pass to printer
+
+    ByteData data = await rootBundle.load(path);
+    Uint8List imageBytes =
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    return imageBytes;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final deviceWidth = MediaQuery.of(context).size.width;
+    final deviceHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Print Nota",
+          style: GoogleFonts.inter(
+            color: darkText,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(
+            Icons.arrow_back_ios_outlined,
+            color: darkText,
+          ),
+        ),
+      ),
+      body: Center(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Container(
+                decoration: BoxDecoration(
+                    color: const Color(0xffE5E5E5),
+                    borderRadius: BorderRadius.circular(15)),
+                padding: const EdgeInsets.only(
+                    left: 25, right: 25, top: 10, bottom: 5),
+                child: DropdownButton<BluetoothDevice>(
+                    isExpanded: true,
+                    underline: Container(),
+                    icon: Icon(Icons.keyboard_arrow_down),
+                    onChanged: (device) {
+                      setState(() {
+                        selectedDevice = device;
+                      });
+                    },
+                    hint: Text("Select Thermal Printer"),
+                    value: selectedDevice,
+                    items: devices
+                        .map((e) => DropdownMenuItem(
+                              child: Text(e.name!),
+                              value: e,
+                            ))
+                        .toList()),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          printer.connect(selectedDevice!);
+                          Timer(Duration(seconds: 5), () {
+                            showSnackBar(context);
+                          });
+                        },
+                        child: Text("Connect")),
+                  ),
+                  SizedBox(width: 15),
+                  Expanded(
+                    child: ElevatedButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          printer.disconnect();
+                          Timer(Duration(seconds: 5), () {
+                            showSnackBar(context);
+                          });
+                        },
+                        child: Text("Disconnect")),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: deviceWidth / 2,
+              child: ElevatedButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: buttonColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final imageBytes =
+                        await imagePathToUint8List('lib/images/home.png');
+                    if ((await printer.isConnected)!) {
+                      printer.printImageBytes(imageBytes);
+                      printer.printNewLine();
+                      printer.printNewLine();
+                      printer.printNewLine();
+                      printer.printCustom("Perusahaan X", 1, 1);
+                      printer.printCustom("Jl Utama Tengah No 667", 1, 1);
+                      printer.printNewLine();
+                      printer.printNewLine();
+                      printer.printCustom("Kode Struk : " + _printKode, 1, 0);
+                      printer.printCustom("Tanggal : 24-02-2023", 1, 0);
+                      printer.printNewLine();
+                      for (int i = 0; i < _listPrintBarang.length; i++) {
+                        printer.printCustom(_listPrintBarang[i], 1, 0);
+                        printer.printLeftRight(
+                            _listPrintSubTotal[i] + " x " + _listPrintJumlah[i],
+                            "Rp " + _listPrintHarga[i],
+                            1);
+                      }
+                      printer.printNewLine();
+                      printer.printLeftRight("Total", "Rp " + _printTotal, 1);
+                      printer.printNewLine();
+                      printer.printNewLine();
+                    }
+                  },
+                  child: Text("print")),
+            ),
+          ],
+        ),
       ),
     );
   }

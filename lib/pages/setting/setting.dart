@@ -2565,13 +2565,16 @@ class _ReturPageState extends State<ReturPage> {
                                             thickness: 1,
                                             color: Color(0xFF7A7A7A),
                                           ),
-                                          Text(
-                                            snapData[1][index]['keterangan'],
-                                            style: GoogleFonts.inter(
-                                                fontSize: 10,
-                                                letterSpacing: 0.125,
-                                                color: darkText,
-                                                fontWeight: FontWeight.w500),
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              snapData[1][index]['keterangan'],
+                                              style: GoogleFonts.inter(
+                                                  fontSize: 10,
+                                                  letterSpacing: 0.125,
+                                                  color: darkText,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
                                           ),
                                         ],
                                       ))

@@ -88,10 +88,10 @@ class ServicesPenjualan {
   }
 
   //TODO: Get Tanggal Transaksi
-  Future getTanggal(tanggalTGL, statusTGL) async {
+  Future getTanggal(tanggalTGL, statusTGL, tanggal2TGL) async {
     final response = await http.get(
       Uri.parse(
-          "${_linkPath}tr/tgl-penjualan?tanggal=$tanggalTGL&status=$statusTGL"),
+          "${_linkPath}tr/tgl-penjualan?tanggal=$tanggalTGL&status=$statusTGL&tanggal2=$tanggal2TGL"),
     );
     if (response.statusCode == 200) {
       var jsonRespStatus = json.decode(response.body)['status'];
