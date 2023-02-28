@@ -110,6 +110,33 @@ class ServicesStock {
     }
   }
 
+  Future getFilterStockType() async {
+    final response = await http.get(
+      Uri.parse("${_linkPath}flt/read-fil-stock"),
+    );
+    if (response.statusCode == 200) {
+      var jsonRespStatus = json.decode(response.body)['status'];
+      var jsonRespData = json.decode(response.body)['data'];
+
+      return [jsonRespStatus, jsonRespData];
+    } else {
+      throw Exception("Gagal mengambil data");
+    }
+  }
+
+Future getFilterStockTypePilih(namaBarang) async {
+    final response = await http.get(
+      Uri.parse("${_linkPath}flt/fil-stock?nama_barang=$namaBarang"),
+    );
+    if (response.statusCode == 200) {
+      var jsonRespStatus = json.decode(response.body)['status'];
+      var jsonRespData = json.decode(response.body)['data'];
+
+      return [jsonRespStatus, jsonRespData];
+    } else {
+      throw Exception("Gagal mengambil data");
+    }
+  }
   //TODO: Get Filter 
   Future getFilterStockMasuk(tanggal, tipeUrutan, tipeTanggal) async {
     final response = await http.get(

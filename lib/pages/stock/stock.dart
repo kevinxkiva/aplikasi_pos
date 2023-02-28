@@ -48,6 +48,7 @@ class _StockPageState extends State<StockPage>
 
   late Future listStock;
   late Future listStockMasuk;
+  late Future listStockMasukFilterType;
 
   int _selectedIndexChipsFilter = 0;
   String tesIsiStock = "";
@@ -85,6 +86,7 @@ class _StockPageState extends State<StockPage>
 
     listStock = servicesStock.getStock();
     listStockMasuk = servicesStock.getStockIn();
+    listStockMasukFilterType = servicesStock.getFilterStockType();
   }
 
   @override
@@ -100,10 +102,11 @@ class _StockPageState extends State<StockPage>
     _controllerSearchBar.dispose();
   }
 
-  final List<Filter> _chipsFilterList = [
-    Filter("Ascending", Colors.white),
-    Filter("Descending", Colors.white),
-  ];
+  // final List<Filter> _chipsFilterList = [
+  //   Filter("Ascending", Colors.white),
+  //   Filter("Descending", Colors.white),
+  //   Filter("aaaaaaaa", Colors.white),
+  // ];
 
   List<StockBarang> stockBarangList = [];
   List<StockBarang> displayStockBarangList = [];
@@ -1315,46 +1318,46 @@ class _StockPageState extends State<StockPage>
   }
 
   //GENERATE CHIPS BERDASARKAN LIST DATA CLASS FILTER -> List<Filter> _chipsFilterList
-  List<Widget> generateFilterChips() {
-    List<Widget> chips = [];
-    for (int i = 0; i < _chipsFilterList.length; i++) {
-      Widget item = ChoiceChip(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        elevation: 5,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        label: Text(_chipsFilterList[i].label),
-        labelStyle: GoogleFonts.nunito(
-            fontSize: 13,
-            letterSpacing: 0.125,
-            fontWeight: FontWeight.w700,
-            color: _selectedIndexChipsFilter == i ? Colors.white : darkText),
-        backgroundColor: _chipsFilterList[i].color,
-        selectedColor: buttonColor,
-        selected: _selectedIndexChipsFilter == i,
-        onSelected: (bool value) {
-          setState(() {
-            tesIsiStock = _chipsFilterList[i].label;
-            _selectedIndexChipsFilter = i;
+  // List<Widget> generateFilterChips() {
+  //   List<Widget> chips = [];
+  //   for (int i = 0; i < _chipsFilterList.length; i++) {
+  //     Widget item = ChoiceChip(
+  //       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+  //       elevation: 5,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(15),
+  //       ),
+  //       label: Text(_chipsFilterList[i].label),
+  //       labelStyle: GoogleFonts.nunito(
+  //           fontSize: 13,
+  //           letterSpacing: 0.125,
+  //           fontWeight: FontWeight.w700,
+  //           color: _selectedIndexChipsFilter == i ? Colors.white : darkText),
+  //       backgroundColor: _chipsFilterList[i].color,
+  //       selectedColor: buttonColor,
+  //       selected: _selectedIndexChipsFilter == i,
+  //       onSelected: (bool value) {
+  //         setState(() {
+  //           tesIsiStock = _chipsFilterList[i].label;
+  //           _selectedIndexChipsFilter = i;
 
-            if (_selectedIndexChipsFilter == 0) {
-              // filterAscending();
-              setState(() {
-                listStock = servicesStock.getFilterStock(0);
-              });
-            } else if (_selectedIndexChipsFilter == 1) {
-              setState(() {
-                listStock = servicesStock.getFilterStock(1);
-              });
-            }
-          });
-        },
-      );
-      chips.add(item);
-    }
-    return chips;
-  }
+  //           if (_selectedIndexChipsFilter == 0) {
+  //             // filterAscending();
+  //             setState(() {
+  //               listStock = servicesStock.getFilterStock(0);
+  //             });
+  //           } else if (_selectedIndexChipsFilter == 1) {
+  //             setState(() {
+  //               listStock = servicesStock.getFilterStock(1);
+  //             });
+  //           }
+  //         });
+  //       },
+  //     );
+  //     chips.add(item);
+  //   }
+  //   return chips;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -1465,14 +1468,110 @@ class _StockPageState extends State<StockPage>
                           ),
                         ),
                         const SizedBox(height: 10),
-                        //FILTER
-                        Wrap(
-                          spacing: 6,
-                          direction: Axis.horizontal,
-                          children: generateFilterChips(),
+                        SizedBox(
+                          height: 40,
+                          child: Expanded(
+                            child: FutureBuilder(
+                              future: listStockMasukFilterType,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  List snapData = snapshot.data! as List;
+                                  if (snapData[0] != 404) {
+                                    return ListView.builder(
+                                      itemCount: snapData[1].length,
+                                      scrollDirection: Axis.horizontal,
+                                      itemBuilder: (context, index) {
+                                        return Row(
+                                          children: [
+                                            ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  padding: EdgeInsets.symmetric(
+                                                      vertical: 18,
+                                                      horizontal: 18),
+                                                  backgroundColor: buttonColor,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    listStock = servicesStock
+                                                        .getFilterStockTypePilih(
+                                                            snapData[1][index][
+                                                                    'nama_barang']
+                                                                .toString());
+                                                  });
+                                                },
+                                                child: Text(
+                                                  snapData[1][index]
+                                                      ['nama_barang'],
+                                                  style: GoogleFonts.inter(
+                                                    color: lightText,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 12,
+                                                  ),
+                                                )),
+                                            const SizedBox(
+                                              width: 5,
+                                            )
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  } else if (snapData[0] == 404) {
+                                    //cekHeaderTransaksi = true;
+                                    return Column(
+                                      children: const [
+                                        Center(
+                                          child: Text("Transaksi Masih Kosong"),
+                                        )
+                                      ],
+                                    );
+                                  }
+                                }
+                                return Column();
+                              },
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 10),
-
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  listStock = servicesStock.getStock();
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 18, horizontal: 18),
+                                backgroundColor: lightText,
+                                side: BorderSide(
+                                  color: buttonColor,
+                                  width: 1.5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                              ),
+                              child: Text(
+                                "Clear Filter",
+                                style: GoogleFonts.inter(
+                                  color: buttonColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 10),
                         //ISI DARI STOCK
                         // Expanded(
                         //   child: Center(
