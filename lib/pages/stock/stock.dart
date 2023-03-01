@@ -1470,70 +1470,84 @@ class _StockPageState extends State<StockPage>
                         const SizedBox(height: 10),
                         SizedBox(
                           height: 40,
-                          child: Expanded(
-                            child: FutureBuilder(
-                              future: listStockMasukFilterType,
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  List snapData = snapshot.data! as List;
-                                  if (snapData[0] != 404) {
-                                    return ListView.builder(
-                                      itemCount: snapData[1].length,
-                                      scrollDirection: Axis.horizontal,
-                                      itemBuilder: (context, index) {
-                                        return Row(
-                                          children: [
-                                            ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 18,
-                                                      horizontal: 18),
-                                                  backgroundColor: buttonColor,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            15),
-                                                  ),
-                                                ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    listStock = servicesStock
-                                                        .getFilterStockTypePilih(
-                                                            snapData[1][index][
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: FutureBuilder(
+                                  future: listStockMasukFilterType,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      List snapData = snapshot.data! as List;
+                                      if (snapData[0] != 404) {
+                                        return ListView.builder(
+                                          itemCount: snapData[1].length,
+                                          shrinkWrap: true,
+                                          scrollDirection: Axis.horizontal,
+                                          controller: ScrollController(),
+                                          physics:
+                                              const ClampingScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            return Row(
+                                              children: [
+                                                ElevatedButton(
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor:
+                                                          buttonColor,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                    15),
+                                                      ),
+                                                    ),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        listStock = servicesStock
+                                                            .getFilterStockTypePilih(snapData[1]
+                                                                        [
+                                                                        index]
+                                                                    [
                                                                     'nama_barang']
                                                                 .toString());
-                                                  });
-                                                },
-                                                child: Text(
-                                                  snapData[1][index]
-                                                      ['nama_barang'],
-                                                  style: GoogleFonts.inter(
-                                                    color: lightText,
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 12,
-                                                  ),
-                                                )),
-                                            const SizedBox(
-                                              width: 5,
+                                                      });
+                                                    },
+                                                    child: Text(
+                                                      snapData[1][index]
+                                                          ['nama_barang'],
+                                                      style:
+                                                          GoogleFonts.inter(
+                                                        color: lightText,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 12,
+                                                      ),
+                                                    )),
+                                                const SizedBox(
+                                                  width: 5,
+                                                )
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      } else if (snapData[0] == 404) {
+                                        //cekHeaderTransaksi = true;
+                                        return Column(
+                                          children: const [
+                                            Center(
+                                              child: Text(
+                                                  "Transaksi Masih Kosong"),
                                             )
                                           ],
                                         );
-                                      },
-                                    );
-                                  } else if (snapData[0] == 404) {
-                                    //cekHeaderTransaksi = true;
-                                    return Column(
-                                      children: const [
-                                        Center(
-                                          child: Text("Transaksi Masih Kosong"),
-                                        )
-                                      ],
-                                    );
-                                  }
-                                }
-                                return Column();
-                              },
-                            ),
+                                      }
+                                    }
+                                    return Column();
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 10),
