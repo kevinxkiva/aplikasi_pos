@@ -25,6 +25,8 @@ final List _listPrintSubTotal = [];
 String _printKode = "";
 String _printTotal = "";
 
+late Future getTanggalTransaksi;
+
 bool cekStatus = false;
 bool cekTanggal = false;
 bool cekHeaderTransaksi = true;
@@ -70,7 +72,6 @@ class _PenjualanPageState extends State<PenjualanPage>
 
   ServicesPenjualan servicesUser = ServicesPenjualan();
   late Future getTransaksi;
-  late Future getTanggalTransaksi;
 
   void initialSelectedDate() {
     _formattedDate = DateFormat('dd-MM-yyyy').format(_selectedDate);
@@ -492,8 +493,8 @@ class _PenjualanPageState extends State<PenjualanPage>
                                       if (_date2 != "") {
                                         setState(() {
                                           getTanggalTransaksi =
-                                              servicesUser.getTanggal(
-                                                  _date, tipeStatusKirim, _date2);
+                                              servicesUser.getTanggal(_date,
+                                                  tipeStatusKirim, _date2);
                                           getTransaksi = servicesUser.getFilter(
                                               _date, tipeStatusKirim);
                                         });
@@ -1979,6 +1980,13 @@ class _TambahPenjualanState extends State<TambahPenjualan> {
                                         total_Harga_Depan,
                                         context);
                                     setState(() {
+                                      getTanggalTransaksi =
+                                          servicesUser.getTanggal(
+                                              DateFormat('dd-MM-yyyy')
+                                                  .format(_selectedDate),
+                                              tipeStatusKirim,
+                                              DateFormat('dd-MM-yyyy')
+                                                  .format(_selectedDate2));
                                       Navigator.of(context)
                                           .popUntil((route) => route.isFirst);
                                     });
